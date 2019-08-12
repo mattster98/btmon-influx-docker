@@ -8,4 +8,4 @@ if [ ! -f "/btmon.cfg" ]; then
 fi
 
 # Execute the btmon python script
-./btmon.py -c ${BTMON_CONFIG}
+./btmon.py -c /btmon.cfg
