@@ -1,5 +1,5 @@
 # Pull base image.
-FROM debian:jessie
+FROM alpine:3.10
 
 MAINTAINER Peter Sarossy <peter.sarossy@gmail.com>
 
