@@ -1,5 +1,5 @@
 # Pull base image.
-FROM debian:stretch-slim
+FROM debian:buster
 
 MAINTAINER Peter Sarossy <peter.sarossy@gmail.com>
 
