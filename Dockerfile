@@ -1,5 +1,5 @@
 # Pull base image.
-FROM alpine:3.10
+FROM debian:stretch-slim
 
 MAINTAINER Peter Sarossy <peter.sarossy@gmail.com>
 
