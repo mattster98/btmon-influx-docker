@@ -1,7 +1,7 @@
 # Pull base image.
 FROM debian:buster
 
-MAINTAINER Peter Sarossy <peter.sarossy@gmail.com>
+MAINTAINER Robert Wojciechowski <robert@wojo.net>
 
 # Set environment.
 ENV DEBIAN_FRONTEND noninteractive
@@ -23,4 +23,4 @@ ADD . /opt/btmon
 VOLUME ["/etc/bind", "/var/lib/bind", "/var/run/named"]
 
 # Define the command script.
-CMD ["/bin/sh", "-c", "./btmon"]
+CMD ["./btmon.py", "-c", "/btmon.cfg"]

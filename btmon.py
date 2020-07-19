@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/env python
 __version__ = '3.3.1'
 """Data collector/processor for Brultech monitoring devices.
 
@@ -1000,7 +1000,7 @@ INCLUDE_CURRENT = 0
 READ_RETRIES = 0
 
 # how long to wait after a failure before attempting to read again, in seconds
-RETRY_WAIT = 0
+RETRY_WAIT = 60
 
 # number of retries to attempt when polling device
 POLL_RETRIES = 3
@@ -1037,7 +1037,7 @@ DB_SCHEMA_COUNTERS = 'counters'      # just the counters and sensor readings
 DB_SCHEMA_ECMREAD = 'ecmread'        # basic format used by ecmread
 DB_SCHEMA_ECMREADEXT = 'ecmreadext'  # extended format used by ecmread
 DB_SCHEMAS = [DB_SCHEMA_COUNTERS, DB_SCHEMA_ECMREAD, DB_SCHEMA_ECMREADEXT]
-DEFAULT_DB_SCHEMA = DB_SCHEMA_ECMREAD
+DEFAULT_DB_SCHEMA = DB_SCHEMA_COUNTERS
 
 # channel filters
 FILTER_PE_LABELS = 'pelabels'
@@ -1191,11 +1191,11 @@ PBE_TOKEN = ''
 PBE_FEED = ''
 
 # open energy monitor emoncms defaults
-OEM_URL = 'https://localhost/emoncms/api/post'
+OEM_URL = 'https://localhost/emoncms/input/post.json'
 OEM_UPLOAD_PERIOD = MINUTE
 OEM_TIMEOUT = 15 # seconds
 OEM_TOKEN = ''
-OEM_NODE = None
+OEM_NODE = 1
 
 # wattvision v0.2 defaults
 #   https://www.wattvision.com/usr/api
@@ -1815,7 +1815,7 @@ class ECM1240BinaryPacket(ECM1220BinaryPacket):
         elif fltr == FILTER_DB_SCHEMA_ECMREAD:
             c = ['volts', 'ch1_amps', 'ch2_amps', 'ch1_w', 'ch2_w', 'aux1_w', 'aux2_w', 'aux3_w', 'aux4_w', 'aux5_w']
         elif fltr == FILTER_DB_SCHEMA_ECMREADEXT:
-            c = ['volts', 'ch1_a', 'ch2_a', 'ch1_w', 'ch2_w', 'aux1_w', 'aux2_w', 'aux3_w', 'aux4_w', 'aux5_w', 'ch1_wh', 'ch2_wh', 'aux1_wh', 'aux2_wh', 'aux3_wh', 'aux4_wh', 'aux5_wh', 'ch1_whd', 'ch2_whd', 'aux1_whd', 'aux2_whd', 'aux3_whd', 'aux4_whd', 'aux5_whd', 'ch1_pw', 'ch1_nw', 'ch2_pw', 'ch2_nw', 'ch1_pwh', 'ch1_nwh', 'ch2_pwh', 'ch2_nwh']
+            c = ['volts', 'ch1_a', 'ch2_a', 'ch1_w', 'ch2_w', 'aux1_w', 'aux2_w', 'aux3_w', 'aux4_w', 'aux5_w', 'ch1_wh', 'ch2_wh', 'aux1_wh', 'aux2_wh', 'aux3_wh', 'aux4_wh', 'aux5_wh', 'ch1_dwh', 'ch2_dwh', 'aux1_dwh', 'aux2_dwh', 'aux3_dwh', 'aux4_dwh', 'aux5_dwh', 'ch1_pw', 'ch1_nw', 'ch2_pw', 'ch2_nw', 'ch1_pwh', 'ch1_nwh', 'ch2_pwh', 'ch2_nwh']
         elif fltr == FILTER_DB_SCHEMA_COUNTERS:
             c = ['volts', 'ch1_a', 'ch2_a', 'ch1_aws', 'ch2_aws', 'ch1_pws', 'ch2_pws', 'aux1_ws', 'aux2_ws', 'aux3_ws', 'aux4_ws', 'aux5_ws', 'aux5_volts']
         return c
@@ -2330,11 +2330,14 @@ class BufferedDataCollector(object):
                 self.open()
                 self._read(packet_format)
                 havedata = True
+            except EmptyReadError, e:
+                dbgmsg('read failed, socket closed by other side: %s' % e.msg)
+                raise e
             except ReadError, e:
                 dbgmsg('read failed: %s' % e.msg)
             except KeyboardInterrupt, e:
                 raise e
-            except (EmptyReadError, Exception), e:
+            except Exception, e:
                 nerr += 1
                 dbgmsg('failed read %d of %d' % (nerr, READ_RETRIES))
                 errmsg(e)
@@ -2565,6 +2568,8 @@ class SocketServerCollector(BufferedDataCollector):
             dbgmsg('SOCKET: waiting for connection')
             self._conn, addr = self._sock.accept()
             self._blockingread(packet_format)
+        except EmptyReadError, e:
+            dbgmsg('SOCKET: connection closed by other side')
         finally:
             if self._conn:
                 dbgmsg('SOCKET: closing connection')
@@ -3936,7 +3941,7 @@ class OpenEnergyMonitorProcessor(UploadProcessor):
         for p in packets:
             osn = obfuscate_serial(p['serial'])
             data = []
-            data.append('(%s:%.1f)' % (mklabel(osn, 'volts'), p['volts']))
+            data.append('%s:%.1f' % (mklabel(osn, 'volts'), p['volts']))
             if INCLUDE_CURRENT:
                 for idx, c, in enumerate(PACKET_FORMAT.channels(FILTER_CURRENT)):
                     data.append('%s:%.2f' % (mklabel(osn, c), p[c]))
