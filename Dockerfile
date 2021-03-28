@@ -1,17 +1,13 @@
 # Pull base image.
-FROM debian:buster
+FROM python:3
 
-MAINTAINER Robert Wojciechowski <robert@wojo.net>
+LABEL maintainer="Robert Wojciechowski <robert@wojo.net>"
 
 # Set environment.
 ENV DEBIAN_FRONTEND noninteractive
 
 # Install packages.
-RUN apt-get update
-RUN apt-get install -y curl python sqlite3 wget python-influxdb
-
-# Clean up APT when done.
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN pip install --no-cache-dir influxdb-client
 
 # Define working directory.
 WORKDIR /opt/btmon
@@ -23,4 +19,4 @@ ADD . /opt/btmon
 VOLUME ["/etc/bind", "/var/lib/bind", "/var/run/named"]
 
 # Define the command script.
-CMD ["./btmon.py", "-c", "/btmon.cfg"]
+CMD ["./btmon3.py", "-c", "/btmon3.cfg"]
