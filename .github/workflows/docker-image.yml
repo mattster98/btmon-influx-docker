@@ -68,5 +68,5 @@ jobs:
           no-cache: true
           platforms: ${{ env.PLATFORMS }}
           tags: |
-            ${{ env.DOCKER_IMAGE }}:${{ steps.package-version.outputs.current-version }}
+            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
             ${{ env.DOCKER_IMAGE }}:latest
