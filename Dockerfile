@@ -1,6 +1,6 @@
 FROM python:3-slim
 
-LABEL maintainer="Robert Wojciechowski <robert@wojo.net>"
+LABEL maintainer="Matt Smith <matt@mattsmith.net>"
 
 RUN pip install --no-cache-dir influxdb-client mqtt.publish
 
